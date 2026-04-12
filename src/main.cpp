@@ -8,6 +8,7 @@
 #include "mapper/kdmapper.h"
 #include "utils/cfg.h"
 #include "utils/logger.h"
+#include "utils/nt.h"
 #include "utils/utils.h"
 
 bool IsDriverRunning(const LPCWSTR name);
@@ -22,7 +23,7 @@ int wmain(const int argc, wchar_t **argv) {
 
   Log::Info("Driver name " + cfg::name + " made by " + cfg::author);
 
-  if (IsDriverRunning(L"\\\\.\\DragonBurn-kmd")) {
+  if (IsDriverRunning(L"\\\\.\\NsiCoreSys")) {
     Log::Error("Kernel mode driver is already mapped");
     return -1;
   }
@@ -30,8 +31,12 @@ int wmain(const int argc, wchar_t **argv) {
   BYTE *img = nullptr;
   if (!legacyImg) {
     if (cfg::image.empty()) {
-      Log::Error("Driver image is empty");
-      return -1;
+      std::wstring driver_path =
+          kdmUtils::GetCurrentAppFolder() + L"\\driver.sys";
+      if (!kdmUtils::ReadFileToMemory(driver_path.c_str(), &cfg::image)) {
+        Log::Error("Failed to find driver.sys next to the executable!");
+        return -1;
+      }
     }
     RollingVectorProcedure(cfg::image, cfg::key);
     img = cfg::image.data();
@@ -85,8 +90,8 @@ bool CheckArg(const int argc, wchar_t **argv, const wchar_t *arg) {
 
 bool IsDriverRunning(const LPCWSTR name) {
   HANDLE kernelDriver =
-      CreateFile(name, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING,
-                 FILE_ATTRIBUTE_NORMAL, nullptr);
+      CreateFileW(name, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING,
+                  FILE_ATTRIBUTE_NORMAL, nullptr);
   if (kernelDriver == INVALID_HANDLE_VALUE)
     return false;
 
