@@ -14,6 +14,7 @@ add_definitions(-D_MBCS -D_CRT_SECURE_NO_WARNINGS -DUNICODE -D_UNICODE)
 include_directories(.)
 include_directories(utils)
 include_directories(mapper)
+include_directories(gay)
 
 # Sources
 set(SOURCES
@@ -23,6 +24,9 @@ set(SOURCES
     "mapper/kdmapper.cpp"
     "mapper/portable_executable.cpp"
     "mapper/service.cpp"
+    "updater/updater.cpp"
+    "radar/radar.cpp"
+    "gay/easywsclient/easywsclient.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -34,6 +38,8 @@ target_link_libraries(${PROJECT_NAME}
     user32.lib
     shell32.lib
     advapi32.lib
+    ws2_32.lib
+    wininet.lib
 )
 
 # Build path
