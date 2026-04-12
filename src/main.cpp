@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <filesystem>
 #include <iostream>
+#include <shellapi.h>
 #include <string>
 #include <vector>
 
@@ -10,6 +11,11 @@
 #include "utils/logger.h"
 #include "utils/nt.h"
 #include "utils/utils.h"
+
+#include "driver/ext/memory.h"
+#include "easywsclient/easywsclient.hpp"
+#include "radar/radar.h"
+#include "updater/updater.h"
 
 bool IsDriverRunning(const LPCWSTR name);
 bool CheckArg(const int argc, wchar_t **argv, const wchar_t *arg);
@@ -22,11 +28,6 @@ int wmain(const int argc, wchar_t **argv) {
   bool passAllocationPtr = false;
 
   Log::Info("Driver name " + cfg::name + " made by " + cfg::author);
-
-  if (IsDriverRunning(L"\\\\.\\NsiCoreSys")) {
-    Log::Error("Kernel mode driver is already mapped");
-    return -1;
-  }
 
   BYTE *img = nullptr;
   if (!legacyImg) {
@@ -69,8 +70,82 @@ int wmain(const int argc, wchar_t **argv) {
   if (!NT_SUCCESS(intel_driver::Unload()))
     Log::Warning("Warning: failed to unload intel driver", true);
 
-  Log::Fine("Driver mapped successfully");
-  system("pause");
+  Log::Fine(
+      "Driver mapped successfully. Initializing Cs2-Webradar by swansizz...");
+
+  if (!updater::InitializeOffsets()) {
+    Log::Error("Fatal: Couldn't fetch dynamic offsets.");
+    system("pause");
+    return -1;
+  }
+
+  // Define memory instance and base address
+  Memory mem(L"cs2.exe");
+  if (!mem.IsConnected()) {
+    Log::Error("Failed to find cs2.exe. Please run the game first.");
+    system("pause");
+    return -1;
+  }
+
+  uintptr_t clientBase = mem.GetModuleBase(L"client.dll");
+  if (!clientBase) {
+    Log::Error("Failed to get client.dll base.");
+    system("pause");
+    return -1;
+  }
+
+  Log::Fine("Connected to kernel. Launching Web Socket Server...");
+
+  std::wstring current_path = kdmUtils::GetCurrentAppFolder();
+  std::wstring app_js_path = current_path + L"\\webapp\\ws\\app.js";
+
+  if (GetFileAttributesW(app_js_path.c_str()) == INVALID_FILE_ATTRIBUTES) {
+    // Try deeper fallback: src/build/bin -> src/webapp
+    app_js_path = current_path + L"\\..\\..\\webapp\\ws\\app.js";
+    if (GetFileAttributesW(app_js_path.c_str()) == INVALID_FILE_ATTRIBUTES) {
+      // Try even deeper (if ran from further down)
+      app_js_path = current_path + L"\\..\\webapp\\ws\\app.js";
+    }
+  }
+
+  Log::Info("Attempting to launch node server at: " +
+            std::string(app_js_path.begin(), app_js_path.end()));
+
+  std::wstring node_cmd =
+      L"start /B cmd /c \"cd /d " + current_path +
+      L"\\..\\..\\webapp && npm run dev\" > node_log.txt 2>&1";
+  _wsystem(node_cmd.c_str());
+
+  Sleep(3000); // 3 second for node startup
+
+  Log::Info("Launching Web Radar UI...");
+  ShellExecuteA(NULL, "open", "http://localhost:5173", NULL, NULL,
+                SW_SHOWNORMAL);
+
+  // Initialize Winsock for easywsclient
+  WSADATA wsaData;
+  WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+  static auto ws =
+      easywsclient::WebSocket::from_url("ws://127.0.0.1:22006/cs2_webradar");
+  if (!ws) {
+    Log::Error("Failed to connect to Local UI WebSocket Server. Please ensure "
+               "Node.js is installed.");
+    system("pause");
+    return -1;
+  }
+
+  Log::Fine("cs2-webradar by swansizz [Status: Active]");
+
+  while (true) {
+    radar::Run(mem, clientBase);
+    if (ws) {
+      ws->send(radar::m_data.dump());
+      ws->poll();
+    }
+    Sleep(100);
+  }
+
   return 0;
 }
 

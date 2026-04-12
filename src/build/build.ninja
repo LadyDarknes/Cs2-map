@@ -53,7 +53,7 @@ build CMakeFiles\Cs2_Map.dir\main.cpp.obj: CXX_COMPILER__Cs2_Map_unscanned_Relea
   CONFIG = Release
   DEFINES = -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_MBCS -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD
-  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper
+  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper -IC:\Users\Administrator\Desktop\Cs2-map\src\gay
   OBJECT_DIR = CMakeFiles\Cs2_Map.dir
   OBJECT_FILE_DIR = CMakeFiles\Cs2_Map.dir
   TARGET_COMPILE_PDB = CMakeFiles\Cs2_Map.dir\
@@ -64,7 +64,7 @@ build CMakeFiles\Cs2_Map.dir\utils\utils.cpp.obj: CXX_COMPILER__Cs2_Map_unscanne
   CONFIG = Release
   DEFINES = -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_MBCS -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD
-  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper
+  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper -IC:\Users\Administrator\Desktop\Cs2-map\src\gay
   OBJECT_DIR = CMakeFiles\Cs2_Map.dir
   OBJECT_FILE_DIR = CMakeFiles\Cs2_Map.dir\utils
   TARGET_COMPILE_PDB = CMakeFiles\Cs2_Map.dir\
@@ -75,7 +75,7 @@ build CMakeFiles\Cs2_Map.dir\mapper\intel_driver.cpp.obj: CXX_COMPILER__Cs2_Map_
   CONFIG = Release
   DEFINES = -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_MBCS -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD
-  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper
+  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper -IC:\Users\Administrator\Desktop\Cs2-map\src\gay
   OBJECT_DIR = CMakeFiles\Cs2_Map.dir
   OBJECT_FILE_DIR = CMakeFiles\Cs2_Map.dir\mapper
   TARGET_COMPILE_PDB = CMakeFiles\Cs2_Map.dir\
@@ -86,7 +86,7 @@ build CMakeFiles\Cs2_Map.dir\mapper\kdmapper.cpp.obj: CXX_COMPILER__Cs2_Map_unsc
   CONFIG = Release
   DEFINES = -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_MBCS -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD
-  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper
+  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper -IC:\Users\Administrator\Desktop\Cs2-map\src\gay
   OBJECT_DIR = CMakeFiles\Cs2_Map.dir
   OBJECT_FILE_DIR = CMakeFiles\Cs2_Map.dir\mapper
   TARGET_COMPILE_PDB = CMakeFiles\Cs2_Map.dir\
@@ -97,7 +97,7 @@ build CMakeFiles\Cs2_Map.dir\mapper\portable_executable.cpp.obj: CXX_COMPILER__C
   CONFIG = Release
   DEFINES = -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_MBCS -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD
-  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper
+  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper -IC:\Users\Administrator\Desktop\Cs2-map\src\gay
   OBJECT_DIR = CMakeFiles\Cs2_Map.dir
   OBJECT_FILE_DIR = CMakeFiles\Cs2_Map.dir\mapper
   TARGET_COMPILE_PDB = CMakeFiles\Cs2_Map.dir\
@@ -108,9 +108,42 @@ build CMakeFiles\Cs2_Map.dir\mapper\service.cpp.obj: CXX_COMPILER__Cs2_Map_unsca
   CONFIG = Release
   DEFINES = -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_MBCS -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD
-  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper
+  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper -IC:\Users\Administrator\Desktop\Cs2-map\src\gay
   OBJECT_DIR = CMakeFiles\Cs2_Map.dir
   OBJECT_FILE_DIR = CMakeFiles\Cs2_Map.dir\mapper
+  TARGET_COMPILE_PDB = CMakeFiles\Cs2_Map.dir\
+  TARGET_PDB = bin\Cs2_Map.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Cs2_Map.dir
+
+build CMakeFiles\Cs2_Map.dir\updater\updater.cpp.obj: CXX_COMPILER__Cs2_Map_unscanned_Release C$:\Users\Administrator\Desktop\Cs2-map\src\updater\updater.cpp || cmake_object_order_depends_target_Cs2_Map
+  CONFIG = Release
+  DEFINES = -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_MBCS -D_UNICODE
+  FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD
+  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper -IC:\Users\Administrator\Desktop\Cs2-map\src\gay
+  OBJECT_DIR = CMakeFiles\Cs2_Map.dir
+  OBJECT_FILE_DIR = CMakeFiles\Cs2_Map.dir\updater
+  TARGET_COMPILE_PDB = CMakeFiles\Cs2_Map.dir\
+  TARGET_PDB = bin\Cs2_Map.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Cs2_Map.dir
+
+build CMakeFiles\Cs2_Map.dir\radar\radar.cpp.obj: CXX_COMPILER__Cs2_Map_unscanned_Release C$:\Users\Administrator\Desktop\Cs2-map\src\radar\radar.cpp || cmake_object_order_depends_target_Cs2_Map
+  CONFIG = Release
+  DEFINES = -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_MBCS -D_UNICODE
+  FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD
+  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper -IC:\Users\Administrator\Desktop\Cs2-map\src\gay
+  OBJECT_DIR = CMakeFiles\Cs2_Map.dir
+  OBJECT_FILE_DIR = CMakeFiles\Cs2_Map.dir\radar
+  TARGET_COMPILE_PDB = CMakeFiles\Cs2_Map.dir\
+  TARGET_PDB = bin\Cs2_Map.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Cs2_Map.dir
+
+build CMakeFiles\Cs2_Map.dir\gay\easywsclient\easywsclient.cpp.obj: CXX_COMPILER__Cs2_Map_unscanned_Release C$:\Users\Administrator\Desktop\Cs2-map\src\gay\easywsclient\easywsclient.cpp || cmake_object_order_depends_target_Cs2_Map
+  CONFIG = Release
+  DEFINES = -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_MBCS -D_UNICODE
+  FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD
+  INCLUDES = -IC:\Users\Administrator\Desktop\Cs2-map\src\. -IC:\Users\Administrator\Desktop\Cs2-map\src\utils -IC:\Users\Administrator\Desktop\Cs2-map\src\mapper -IC:\Users\Administrator\Desktop\Cs2-map\src\gay
+  OBJECT_DIR = CMakeFiles\Cs2_Map.dir
+  OBJECT_FILE_DIR = CMakeFiles\Cs2_Map.dir\gay\easywsclient
   TARGET_COMPILE_PDB = CMakeFiles\Cs2_Map.dir\
   TARGET_PDB = bin\Cs2_Map.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\Cs2_Map.dir
@@ -123,11 +156,11 @@ build CMakeFiles\Cs2_Map.dir\mapper\service.cpp.obj: CXX_COMPILER__Cs2_Map_unsca
 #############################################
 # Link the executable bin\Cs2_Map.exe
 
-build bin\Cs2_Map.exe: CXX_EXECUTABLE_LINKER__Cs2_Map_Release CMakeFiles\Cs2_Map.dir\main.cpp.obj CMakeFiles\Cs2_Map.dir\utils\utils.cpp.obj CMakeFiles\Cs2_Map.dir\mapper\intel_driver.cpp.obj CMakeFiles\Cs2_Map.dir\mapper\kdmapper.cpp.obj CMakeFiles\Cs2_Map.dir\mapper\portable_executable.cpp.obj CMakeFiles\Cs2_Map.dir\mapper\service.cpp.obj
+build bin\Cs2_Map.exe: CXX_EXECUTABLE_LINKER__Cs2_Map_Release CMakeFiles\Cs2_Map.dir\main.cpp.obj CMakeFiles\Cs2_Map.dir\utils\utils.cpp.obj CMakeFiles\Cs2_Map.dir\mapper\intel_driver.cpp.obj CMakeFiles\Cs2_Map.dir\mapper\kdmapper.cpp.obj CMakeFiles\Cs2_Map.dir\mapper\portable_executable.cpp.obj CMakeFiles\Cs2_Map.dir\mapper\service.cpp.obj CMakeFiles\Cs2_Map.dir\updater\updater.cpp.obj CMakeFiles\Cs2_Map.dir\radar\radar.cpp.obj CMakeFiles\Cs2_Map.dir\gay\easywsclient\easywsclient.cpp.obj
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -MD
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console
-  LINK_LIBRARIES = version.lib  kernel32.lib  user32.lib  shell32.lib  advapi32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_LIBRARIES = version.lib  kernel32.lib  user32.lib  shell32.lib  advapi32.lib  ws2_32.lib  wininet.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   OBJECT_DIR = CMakeFiles\Cs2_Map.dir
   POST_BUILD = cd .
   PRE_LINK = cd .

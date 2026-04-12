@@ -1,7 +1,41 @@
-[1/7] Building CXX object CMakeFiles\Cs2_Map.dir\mapper\portable_executable.cpp.obj
-[2/7] Building CXX object CMakeFiles\Cs2_Map.dir\utils\utils.cpp.obj
-[3/7] Building CXX object CMakeFiles\Cs2_Map.dir\mapper\kdmapper.cpp.obj
-[4/7] Building CXX object CMakeFiles\Cs2_Map.dir\mapper\service.cpp.obj
-[5/7] Building CXX object CMakeFiles\Cs2_Map.dir\main.cpp.obj
-[6/7] Building CXX object CMakeFiles\Cs2_Map.dir\mapper\intel_driver.cpp.obj
-[7/7] Linking CXX executable bin\Cs2_Map.exe
+[1/10] Building CXX object CMakeFiles\Cs2_Map.dir\gay\easywsclient\easywsclient.cpp.obj
+C:\Users\Administrator\Desktop\Cs2-map\src\gay\easywsclient\easywsclient.cpp(98): warning C4477: 'fprintf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'WCHAR *'
+C:\Users\Administrator\Desktop\Cs2-map\src\gay\easywsclient\easywsclient.cpp(98): note: consider using '%ls' in the format string
+C:\Users\Administrator\Desktop\Cs2-map\src\gay\easywsclient\easywsclient.cpp(98): note: consider using '%lls' in the format string
+C:\Users\Administrator\Desktop\Cs2-map\src\gay\easywsclient\easywsclient.cpp(98): note: consider using '%Ls' in the format string
+C:\Users\Administrator\Desktop\Cs2-map\src\gay\easywsclient\easywsclient.cpp(98): note: consider using '%ws' in the format string
+[2/10] Building CXX object CMakeFiles\Cs2_Map.dir\mapper\portable_executable.cpp.obj
+[3/10] Building CXX object CMakeFiles\Cs2_Map.dir\mapper\service.cpp.obj
+[4/10] Building CXX object CMakeFiles\Cs2_Map.dir\utils\utils.cpp.obj
+[5/10] Building CXX object CMakeFiles\Cs2_Map.dir\mapper\kdmapper.cpp.obj
+[6/10] Building CXX object CMakeFiles\Cs2_Map.dir\mapper\intel_driver.cpp.obj
+[7/10] Building CXX object CMakeFiles\Cs2_Map.dir\radar\radar.cpp.obj
+[8/10] Building CXX object CMakeFiles\Cs2_Map.dir\main.cpp.obj
+D:\Microsoft VS\VC\Tools\MSVC\14.50.35717\include\xutility(4924): warning C4244: '=': conversion from 'wchar_t' to 'char', possible loss of data
+D:\Microsoft VS\VC\Tools\MSVC\14.50.35717\include\xutility(4924): note: the template instantiation context (the oldest one first) is
+C:\Users\Administrator\Desktop\Cs2-map\src\main.cpp(112): note: see reference to function template instantiation 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)' being compiled
+        with
+        [
+            _Elem=wchar_t,
+            _Iter=std::_String_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
+            _Alloc=std::allocator<char>
+        ]
+C:\Users\Administrator\Desktop\Cs2-map\src\main.cpp(111): note: see the first reference to 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' in 'wmain'
+D:\Microsoft VS\VC\Tools\MSVC\14.50.35717\include\xstring(862): note: see reference to function template instantiation 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<wchar_t*,wchar_t*,_Size_type>(_Iter,const _Sent,_Size)' being compiled
+        with
+        [
+            _Size_type=unsigned __int64,
+            _Iter=wchar_t *,
+            _Sent=wchar_t *,
+            _Size=unsigned __int64
+        ]
+D:\Microsoft VS\VC\Tools\MSVC\14.50.35717\include\xstring(1018): note: see reference to function template instantiation '_OutIt *std::_Copy_n_unchecked4<wchar_t*,_Size,char*>(_InIt,_SizeTy,_OutIt)' being compiled
+        with
+        [
+            _OutIt=char *,
+            _Size=unsigned __int64,
+            _InIt=wchar_t *,
+            _SizeTy=unsigned __int64
+        ]
+[9/10] Building CXX object CMakeFiles\Cs2_Map.dir\updater\updater.cpp.obj
+[10/10] Linking CXX executable bin\Cs2_Map.exe
