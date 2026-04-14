@@ -208,9 +208,10 @@ const App = () => {
               .filter((player) => player.m_team == 2)
               .map((player) => (
                 <PlayerCard
-                  right={false}
+                  isOnRightSide={false}
                   key={player.m_idx}
                   playerData={player}
+                  localTeam={localTeam}
                 />
               ))}
           </ul>
@@ -241,9 +242,10 @@ const App = () => {
               .filter((player) => player.m_team == 3)
               .map((player) => (
                 <PlayerCard
-                  right={true}
+                  isOnRightSide={true}
                   key={player.m_idx}
                   playerData={player}
+                  localTeam={localTeam}
                   settings={settings}
                 />
               ))}

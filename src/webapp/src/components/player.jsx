@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { getRadarPosition, playerColors } from "../utilities/utilities";
+import { getRadarPosition } from "../utilities/utilities";
 
 
 let playerRotations = [];
@@ -28,6 +28,13 @@ const Player = ({ playerData, mapData, radarImage, localTeam, averageLatency, se
     radarImage.getBoundingClientRect()) || { width: 0, height: 0 };
 
   const scaledSize = 0.7 * settings.dotSize;
+  const isLocalPlayer = playerData.m_is_local === true;
+  const isTeammate = playerData.m_team === localTeam;
+  const markerColor = isLocalPlayer
+    ? "#ffffff"
+    : isTeammate
+      ? "#2dd4bf"
+      : "#ef4444";
 
   useEffect(() => {
     if (playerData.m_is_dead) {
@@ -74,16 +81,20 @@ const Player = ({ playerData, mapData, radarImage, localTeam, averageLatency, se
           transform: `rotate(${(playerData.m_is_dead && `0`) || playerRotation}deg)`,
           width: `${scaledSize}vw`,
           height: `${scaledSize}vw`,
-            opacity: `${(playerData.m_is_dead && `0.8`) || (invalidPosition && `0`) || `1`}`,
+          opacity: `${(playerData.m_is_dead && `0.8`) || (invalidPosition && `0`) || `1`}`,
         }}
       >
         {/* Player dot */}
         <div
-          className={`w-full h-full rounded-[50%_50%_50%_0%] rotate-[315deg]`}
+          className={`w-full h-full rotate-[315deg]`}
           style={{
-
-            backgroundColor: `${(playerData.m_team == localTeam && playerColors[playerData.m_color]) || `red`}`,
+            backgroundColor: markerColor,
             opacity: `${(playerData.m_is_dead && `0.8`) || (invalidPosition && `0`) || `1`}`,
+            borderRadius: isLocalPlayer ? "20%" : "50% 50% 50% 0%",
+            border: isLocalPlayer ? "2px solid #0f172a" : "none",
+            boxShadow: isLocalPlayer
+              ? "0 0 0 2px rgba(255,255,255,0.35), 0 0 14px rgba(255,255,255,0.45)"
+              : "none",
           }}
         />
 
