@@ -1,0 +1,88 @@
+
+> cs2_webradar@0.0.0 dev
+> concurrently "node ws/app.js" "vite"
+
+[0] web_server started
+[0] listening on port '22006'
+[1] 
+[1]   [32m[1mVITE[22m v4.5.14[39m  [2mready in [0m[1m207[22m[2m[0m ms[22m
+[1] 
+[1]   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+[1]   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.103:[1m5173[22m/[39m
+[0] 127.0.0.1 connected
+[1] [2m5:37:13 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\Administrator\Desktop\Cs2-map\src\webapp\src\app.jsx: Unexpected reserved word 'await'. (134:27)
+[1] 
+[1] [0m [90m 132 |[31m             response[33m.[31mthen(r [33m=>[31m r[33m.[31mjson())[33m.[31mthen(data [33m=>[31m {
+[1]  [90m 133 |[31m             [36mif[31m (response[33m.[31mok) {
+[1] [31m[1m>[22m[31m[90m 134 |[31m               [36mconst[31m data [33m=[31m [36mawait[31m response[33m.[31mjson()[33m;[31m
+[1]  [90m     |[31m                            [31m[1m^[22m[31m
+[1]  [90m 135 |[31m               setMapData({ [33m...[31mdata[33m,[31m name[33m:[31m map })[33m;[31m
+[1]  [90m 136 |[31m               document[33m.[31mbody[33m.[31mstyle[33m.[31mbackgroundImage [33m=[31m [32m`url(./data/${map}/background.png)`[31m[33m;[31m
+[1]  [90m 137 |[31m             }[0m[39m
+[1]   Plugin: [35mvite:react-babel[39m
+[1]   File: [36mC:/Users/Administrator/Desktop/Cs2-map/src/webapp/src/app.jsx[39m:134:27
+[1] [33m  134|                const data = await response.json();
+[1]   135|                setMapData({ ...data, name: map });
+[1]   136|                document.body.style.backgroundImage = `url(./data/${map}/background.png)`;
+[1]      |                                                              ^
+[1]   137|              }
+[1]   138|            }[39m
+[1]       at constructor (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:367:19)
+[1]       at JSXParserMixin.raise (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:6630:19)
+[1]       at JSXParserMixin.checkReservedWord (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12237:12)
+[1]       at JSXParserMixin.parseIdentifierName (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12217:12)
+[1]       at JSXParserMixin.parseIdentifier (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12187:23)
+[1]       at JSXParserMixin.parseExprAtom (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:11421:27)
+[1]       at JSXParserMixin.parseExprAtom (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:4797:20)
+[1]       at JSXParserMixin.parseExprSubscripts (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:11081:23)
+[1]       at JSXParserMixin.parseUpdate (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:11066:21)
+[1]       at JSXParserMixin.parseMaybeUnary (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:11046:23)
+[1]       at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10899:61)
+[1]       at JSXParserMixin.parseExprOps (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10904:23)
+[1]       at JSXParserMixin.parseMaybeConditional (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10881:23)
+[1]       at JSXParserMixin.parseMaybeAssign (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10831:21)
+[1]       at C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10800:39
+[1]       at JSXParserMixin.allowInAnd (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12427:16)
+[1]       at JSXParserMixin.parseMaybeAssignAllowIn (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10800:17)
+[1]       at JSXParserMixin.parseVar (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:13389:91)
+[1]       at JSXParserMixin.parseVarStatement (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:13235:10)
+[1]       at JSXParserMixin.parseStatementContent (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12856:23)
+[1]       at JSXParserMixin.parseStatementLike (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12772:17)
+[1]       at JSXParserMixin.parseStatementListItem (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12752:17)
+[1]       at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:13321:61)
+[1]       at JSXParserMixin.parseBlockBody (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:13314:10)
+[1]       at JSXParserMixin.parseBlock (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:13302:10)
+[1]       at JSXParserMixin.parseStatementContent (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12863:21)
+[1]       at JSXParserMixin.parseStatementLike (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12772:17)
+[1]       at JSXParserMixin.parseStatementOrSloppyAnnexBFunctionDeclaration (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12762:17)
+[1]       at JSXParserMixin.parseIfStatement (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:13135:28)
+[1]       at JSXParserMixin.parseStatementContent (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12801:21)
+[1]       at JSXParserMixin.parseStatementLike (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12772:17)
+[1]       at JSXParserMixin.parseStatementListItem (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12752:17)
+[1]       at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:13321:61)
+[1]       at JSXParserMixin.parseBlockBody (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:13314:10)
+[1]       at JSXParserMixin.parseBlock (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:13302:10)
+[1]       at JSXParserMixin.parseFunctionBody (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12106:24)
+[1]       at JSXParserMixin.parseArrowExpression (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12081:10)
+[1]       at JSXParserMixin.parseExprAtom (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:11443:25)
+[1]       at JSXParserMixin.parseExprAtom (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:4797:20)
+[1]       at JSXParserMixin.parseExprSubscripts (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:11081:23)
+[1]       at JSXParserMixin.parseUpdate (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:11066:21)
+[1]       at JSXParserMixin.parseMaybeUnary (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:11046:23)
+[1]       at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10899:61)
+[1]       at JSXParserMixin.parseExprOps (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10904:23)
+[1]       at JSXParserMixin.parseMaybeConditional (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10881:23)
+[1]       at JSXParserMixin.parseMaybeAssign (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10831:21)
+[1]       at C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10800:39
+[1]       at JSXParserMixin.allowInAnd (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12432:12)
+[1]       at JSXParserMixin.parseMaybeAssignAllowIn (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:10800:17)
+[1]       at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\Administrator\Desktop\Cs2-map\src\webapp\node_modules\@babel\parser\lib\index.js:12499:17)
+[1] C:\Users\Administrator\Desktop\Cs2-map\src\webapp\src\app.jsx: Unexpected reserved word 'await'. (134:27)
+[1] 
+[1] [0m [90m 132 |[39m             response[33m.[39mthen(r [33m=>[39m r[33m.[39mjson())[33m.[39mthen(data [33m=>[39m {
+[1]  [90m 133 |[39m             [36mif[39m (response[33m.[39mok) {
+[1] [31m[1m>[22m[39m[90m 134 |[39m               [36mconst[39m data [33m=[39m [36mawait[39m response[33m.[39mjson()[33m;[39m
+[1]  [90m     |[39m                            [31m[1m^[22m[39m
+[1]  [90m 135 |[39m               setMapData({ [33m...[39mdata[33m,[39m name[33m:[39m map })[33m;[39m
+[1]  [90m 136 |[39m               document[33m.[39mbody[33m.[39mstyle[33m.[39mbackgroundImage [33m=[39m [32m`url(./data/${map}/background.png)`[39m[33m;[39m
+[1]  [90m 137 |[39m             }[0m

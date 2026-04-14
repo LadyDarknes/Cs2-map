@@ -11,21 +11,17 @@ using json = nlohmann::json;
 namespace radar {
 json m_data;
 
-std::string ReadString(const Memory &mem, uintptr_t address,
-                       size_t maxLen = 128) {
+std::string ReadString(const Memory &mem, uintptr_t address, size_t maxLen = 128) {
   if (!address || maxLen == 0)
     return "";
 
-  char buf[128] = {0};
-  size_t readSize = (maxLen > 128) ? 128 : maxLen;
-
-  struct DataBlock {
+  struct StringBuffer {
     char data[128];
   };
 
-  DataBlock block = mem.read<DataBlock>(address);
-  block.data[readSize - 1] = '\0';
-  return std::string(block.data);
+  StringBuffer buf = mem.read<StringBuffer>(address);
+  buf.data[127] = '\0';
+  return std::string(buf.data);
 }
 
 uintptr_t GetController(const Memory &mem, uintptr_t entityList, int32_t idx) {

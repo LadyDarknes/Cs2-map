@@ -55,7 +55,6 @@ const Player = ({ playerData, mapData, radarImage, localTeam, averageLatency, se
         width: `${scaledSize}vw`,
         height: `${scaledSize}vw`,
         transform: `translate(${radarImageTranslation.x}px, ${radarImageTranslation.y}px)`,
-        transition: `transform ${averageLatency}ms linear`,
         zIndex: `${(playerData.m_is_dead && `0`) || `1`}`,
         WebkitMask: `${(playerData.m_is_dead && `url('./assets/icons/icon-enemy-death_png.png') no-repeat center / contain`) || `none`}`,
       }}
@@ -76,8 +75,7 @@ const Player = ({ playerData, mapData, radarImage, localTeam, averageLatency, se
           transform: `rotate(${(playerData.m_is_dead && `0`) || playerRotation}deg)`,
           width: `${scaledSize}vw`,
           height: `${scaledSize}vw`,
-          transition: `transform ${averageLatency}ms linear`,
-          opacity: `${(playerData.m_is_dead && `0.8`) || (invalidPosition && `0`) || `1`}`,
+            opacity: `${(playerData.m_is_dead && `0.8`) || (invalidPosition && `0`) || `1`}`,
         }}
       >
         {/* Player dot */}

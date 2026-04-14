@@ -98,21 +98,29 @@ const App = () => {
 
       let currentMapName = "";
 
-      webSocket.onmessage = async (event) => {
+      webSocket.onmessage = (event) => {
         setAverageLatency(getLatency());
 
-        let rawData;
-        if (typeof event.data === 'string') {
-          rawData = event.data;
-        } else if (event.data instanceof Blob) {
-          rawData = await event.data.text();
-        } else {
-          console.error("Unknown message type:", typeof event.data);
-          return;
-        }
-
         try {
-          const parsedData = JSON.parse(rawData);
+          let parsedData;
+          if (typeof event.data === 'string') {
+            parsedData = JSON.parse(event.data);
+          } else {
+            event.data.text().then(text => {
+              const data = JSON.parse(text);
+              setPlayerArray(data.m_players || []);
+              setLocalTeam(data.m_local_team);
+              setBombData(data.m_bomb);
+              if (data.m_map && data.m_map !== "invalid" && data.m_map !== currentMapName) {
+                currentMapName = data.m_map;
+                fetch(`data/${data.m_map}/data.json`).then(r => r.json()).then(mapData => {
+                  setMapData({...mapData, name: data.m_map});
+                  document.body.style.backgroundImage = `url(./data/${data.m_map}/background.png)`;
+                });
+              }
+            });
+            return;
+          }
           setPlayerArray(parsedData.m_players || []);
           setLocalTeam(parsedData.m_local_team);
           setBombData(parsedData.m_bomb);
@@ -120,7 +128,8 @@ const App = () => {
           const map = parsedData.m_map;
           if (map && map !== "invalid" && map !== currentMapName) {
             currentMapName = map;
-            const response = await fetch(`data/${map}/data.json`);
+            const response = fetch(`data/${map}/data.json`);
+            response.then(r => r.json()).then(data => {
             if (response.ok) {
               const data = await response.json();
               setMapData({ ...data, name: map });
