@@ -133,6 +133,21 @@ public:
     return value;
   }
 
+  void read_raw(const std::uintptr_t address, void* buffer, size_t size) const noexcept {
+    if (!kernelDriver || processId == 0 || !buffer || size == 0)
+      return;
+    if (address == 0 || address >= 0x7FFFFFFFFFFF)
+      return;
+
+    Request readReq = {};
+    readReq.process_id = ULongToHandle(processId);
+    readReq.target = reinterpret_cast<PVOID>(address);
+    readReq.buffer = buffer;
+    readReq.size = size;
+    DeviceIoControl(kernelDriver, IOCTL_READ, &readReq, sizeof(readReq),
+                    &readReq, sizeof(readReq), nullptr, nullptr);
+  }
+
   struct WriteRequest {
     PVOID target;
     SIZE_T size;
