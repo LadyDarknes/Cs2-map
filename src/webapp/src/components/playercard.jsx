@@ -1,14 +1,32 @@
 import { useState, useEffect } from "react";
 import MaskedIcon from "./maskedicon";
-import { playerColors, teamEnum } from "../utilities/utilities";
+import { teamEnum } from "../utilities/utilities";
 
-const PlayerCard = ({ playerData, isOnRightSide }) => {
+const PlayerCard = ({ playerData, isOnRightSide, localTeam }) => {
   const [modelName, setModelName] = useState(playerData.m_model_name);
+  const [characterSrc, setCharacterSrc] = useState("");
+  const isLocalPlayer = playerData.m_is_local === true;
+  const isTeammate = playerData.m_team === localTeam;
+  const accentColor = isLocalPlayer
+    ? "#ffffff"
+    : isTeammate
+      ? "#2dd4bf"
+      : "#ef4444";
+
+  const fallbackCharacter =
+    playerData.m_team === teamEnum.counterTerrorist
+      ? "ctm_fbi"
+      : "tm_phoenix";
 
   useEffect(() => {
     if (playerData.m_model_name)
       setModelName(playerData.m_model_name);
   }, [playerData.m_model_name]);
+
+  useEffect(() => {
+    const resolvedModel = playerData.m_model_name || modelName || fallbackCharacter;
+    setCharacterSrc(`./assets/characters/${resolvedModel}.png`);
+  }, [fallbackCharacter, modelName, playerData.m_model_name]);
 
   return (
     <li
@@ -20,6 +38,7 @@ const PlayerCard = ({ playerData, isOnRightSide }) => {
       >
         <div
           className={`hover:cursor-pointer`}
+          style={{ color: accentColor, fontWeight: isLocalPlayer ? 700 : 400 }}
           onClick={() =>
             window.open(
               `https://steamcommunity.com/profiles/${playerData.m_steam_id}`,
@@ -33,15 +52,22 @@ const PlayerCard = ({ playerData, isOnRightSide }) => {
         <div
           className={`w-0 h-0 border-solid border-t-[12px] border-r-[8px] border-b-[12px] border-l-[8px]`}
           style={{
-            borderColor: `${
-              playerColors[playerData.m_color]
-            } transparent transparent transparent`,
+            borderColor: `${accentColor} transparent transparent transparent`,
           }}
         ></div>
         <img
           className={`h-[8rem] ${isOnRightSide && `scale-x-[-1]`}`}
-          src={`./assets/characters/${modelName}.png`}
-        ></img>
+          src={characterSrc}
+          onError={(event) => {
+            const fallbackSrc = `./assets/characters/${fallbackCharacter}.png`;
+            if (!event.currentTarget.src.endsWith(`${fallbackCharacter}.png`)) {
+              event.currentTarget.src = fallbackSrc;
+              setCharacterSrc(fallbackSrc);
+            } else {
+              event.currentTarget.style.display = "none";
+            }
+          }}
+        />
       </div>
 
       <div
@@ -118,6 +144,14 @@ const PlayerCard = ({ playerData, isOnRightSide }) => {
                 }`}
               />
             ))}
+
+          {(!playerData.m_weapons ||
+            (!playerData.m_weapons.m_primary &&
+              !playerData.m_weapons.m_secondary &&
+              (!playerData.m_weapons.m_melee ||
+                playerData.m_weapons.m_melee.length === 0))) && (
+            <span className="text-xs text-slate-400">weapon data yok</span>
+          )}
         </div>
 
         <div className={`flex flex-col relative`}>
