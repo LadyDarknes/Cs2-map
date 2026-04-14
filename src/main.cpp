@@ -134,20 +134,46 @@ int wmain(const int argc, wchar_t **argv) {
   Log::Fine("cs2-webradar by swansizz [Status: Active]");
 
   int loopCount = 0;
+  auto lastDebugTime = std::chrono::high_resolution_clock::now();
+  auto lastSendTime = std::chrono::high_resolution_clock::now();
+
   while (true) {
+    auto loopStart = std::chrono::high_resolution_clock::now();
+
     radar::Run(mem, clientBase);
 
+    auto afterRadar = std::chrono::high_resolution_clock::now();
+    auto radarDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterRadar - loopStart).count();
+
     if (loopCount % 50 == 0) {
-      Log::Info("Loop running, ws=" + std::to_string((bool)ws) + ", players=" +
-                std::to_string(radar::m_data["m_players"].size()) +
-                ", map=" + radar::m_data["m_map"].get<std::string>());
+      auto now = std::chrono::high_resolution_clock::now();
+      auto elapsedSinceLastDebug = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastDebugTime).count();
+      auto elapsedSinceLastSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count();
+
+      Log::Info("[DEBUG] Loop=" + std::to_string(loopCount) +
+                " | RadarRead=" + std::to_string(radarDuration) + "ms" +
+                " | TimeSinceLastSend=" + std::to_string(elapsedSinceLastSend) + "ms" +
+                " | Players=" + std::to_string(radar::m_data["m_players"].size()) +
+                " | Map=" + radar::m_data["m_map"].get<std::string>());
+      lastDebugTime = now;
     }
     loopCount++;
 
     if (ws) {
-      std::string data = radar::m_data.dump();
+      auto sendStart = std::chrono::high_resolution_clock::now();
+
+      std::string data = radar::m_data.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+      size_t dataSize = data.size();
+
       if (!data.empty() && data != "{}") {
         ws->send(data);
+        lastSendTime = std::chrono::high_resolution_clock::now();
+
+        auto sendDuration = std::chrono::duration_cast<std::chrono::microseconds>(lastSendTime - sendStart).count();
+        if (loopCount % 50 == 0) {
+          Log::Info("[DEBUG] WebSocket SEND | Bytes=" + std::to_string(dataSize) +
+                    " | Serialize+Send=" + std::to_string(sendDuration) + "us");
+        }
       }
       ws->poll();
     } else {

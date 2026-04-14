@@ -21,7 +21,20 @@ std::string ReadString(const Memory &mem, uintptr_t address, size_t maxLen = 128
 
   StringBuffer buf = mem.read<StringBuffer>(address);
   buf.data[127] = '\0';
-  return std::string(buf.data);
+
+  std::string safeStr = "";
+  // Sadece güvenli klavye karakterlerini al (JSON'u bozmaması için)
+  for (int i = 0; i < 128 && buf.data[i] != '\0'; i++) {
+    unsigned char c = buf.data[i];
+    // 32 ile 126 arası standart okunabilir karakterlerdir
+    if (c >= 32 && c <= 126) {
+      safeStr += c;
+    }
+  }
+
+  if (safeStr.empty())
+    return "Bilinmeyen";
+  return safeStr;
 }
 
 uintptr_t GetController(const Memory &mem, uintptr_t entityList, int32_t idx) {

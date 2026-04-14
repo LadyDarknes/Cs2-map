@@ -39,7 +39,6 @@ const App = () => {
   const [settings, setSettings] = useState(loadSettings());
   const [bannerOpened, setBannerOpened] = useState(true)
 
-  // Save settings to local storage whenever they change
   useEffect(() => {
     localStorage.setItem("radarSettings", JSON.stringify(settings));
   }, [settings]);
@@ -98,46 +97,53 @@ const App = () => {
 
       let currentMapName = "";
 
-      webSocket.onmessage = (event) => {
+      let msgCount = 0;
+      let lastMsgTime = Date.now();
+
+      webSocket.onmessage = async (event) => {
+        const receiveTime = Date.now();
         setAverageLatency(getLatency());
 
         try {
-          let parsedData;
-          if (typeof event.data === 'string') {
-            parsedData = JSON.parse(event.data);
-          } else {
-            event.data.text().then(text => {
-              const data = JSON.parse(text);
-              setPlayerArray(data.m_players || []);
-              setLocalTeam(data.m_local_team);
-              setBombData(data.m_bomb);
-              if (data.m_map && data.m_map !== "invalid" && data.m_map !== currentMapName) {
-                currentMapName = data.m_map;
-                fetch(`data/${data.m_map}/data.json`).then(r => r.json()).then(mapData => {
-                  setMapData({...mapData, name: data.m_map});
-                  document.body.style.backgroundImage = `url(./data/${data.m_map}/background.png)`;
-                });
-              }
-            });
-            return;
-          }
-          setPlayerArray(parsedData.m_players || []);
-          setLocalTeam(parsedData.m_local_team);
-          setBombData(parsedData.m_bomb);
+          let rawText = "";
+          const dataType = event.data instanceof Blob ? "Blob" : "String";
 
-          const map = parsedData.m_map;
-          if (map && map !== "invalid" && map !== currentMapName) {
-            currentMapName = map;
-            const response = fetch(`data/${map}/data.json`);
-            response.then(r => r.json()).then(data => {
-            if (response.ok) {
-              const data = await response.json();
-              setMapData({ ...data, name: map });
-              document.body.style.backgroundImage = `url(./data/${map}/background.png)`;
+          if (event.data instanceof Blob) {
+            rawText = await event.data.text();
+          } else {
+            rawText = event.data;
+          }
+
+          const parsedData = JSON.parse(rawText);
+          msgCount++;
+
+          const timeSinceLastMsg = receiveTime - lastMsgTime;
+          lastMsgTime = receiveTime;
+
+          if (msgCount % 50 === 0) {
+            console.log(`[DEBUG React] Msg=${msgCount} | Type=${dataType} | TimeSinceLast=${timeSinceLastMsg}ms | Players=${parsedData.m_players?.length || 0} | Map=${parsedData.m_map}`);
+          }
+
+          if (parsedData && parsedData.m_players) {
+            setPlayerArray(parsedData.m_players);
+            setLocalTeam(parsedData.m_local_team);
+            setBombData(parsedData.m_bomb);
+
+            const map = parsedData.m_map;
+            if (map && map !== "invalid" && map !== currentMapName) {
+              currentMapName = map;
+              console.log(`[DEBUG React] Map changed to: ${map}`);
+              fetch(`data/${map}/data.json`)
+                .then(r => r.json())
+                .then(data => {
+                  setMapData({ ...data, name: map });
+                  document.body.style.backgroundImage = `url(./data/${map}/background.png)`;
+                })
+                .catch(e => console.error("Map load error:", e));
             }
           }
-        } catch (e) {
-          console.error("Error processing message:", e);
+        } catch (err) {
+          console.warn("[DEBUG React] Parse error:", err.message);
         }
       };
     };
