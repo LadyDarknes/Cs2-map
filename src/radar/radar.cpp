@@ -52,7 +52,8 @@ std::vector<unsigned char> ReadBlock(const Memory &mem, uintptr_t address,
 }
 } // namespace
 
-std::string ReadString(const Memory &mem, uintptr_t address, size_t maxLen = 128) {
+std::string ReadString(const Memory &mem, uintptr_t address,
+                       size_t maxLen = 128) {
   if (!address || maxLen == 0)
     return "";
 
@@ -90,21 +91,17 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
                             endEntityList - startEntityList)
                             .count();
 
-  if (!entityList) {
-    Log::Info("[PROF] entityList=0, time=" + std::to_string(entityListTime) +
-              "us");
-    return;
-  }
+  Log::Debug("entityList=0, time=" + std::to_string(entityListTime) + "us");
 
   uintptr_t controllerPagePtr = mem.read<uintptr_t>(entityList + 0x10);
   if (!controllerPagePtr) {
-    Log::Info("[PROF] listEntry=0");
+    Log::Debug("listEntry=0");
     return;
   }
 
   auto controllerPage = ReadBlock(mem, controllerPagePtr, kEntityPageSize);
   if (controllerPage.size() != kEntityPageSize) {
-    Log::Warning("[PROF] controllerPage read failed");
+    Log::Debug("controllerPage read failed");
     return;
   }
 
@@ -120,16 +117,16 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
     uintptr_t controller = ReadFromBuffer<uintptr_t>(
         controllerPage, static_cast<size_t>(i) * kEntityStride);
     auto endController = std::chrono::high_resolution_clock::now();
-    totalGetController +=
-        std::chrono::duration_cast<std::chrono::microseconds>(endController -
-                                                              startController)
-            .count();
+    totalGetController += std::chrono::duration_cast<std::chrono::microseconds>(
+                              endController - startController)
+                              .count();
 
     if (!controller)
       continue;
 
     ptrdiff_t controllerMinOffset =
-        (updater::offsets.m_sSanitizedPlayerName < updater::offsets.m_hPlayerPawn)
+        (updater::offsets.m_sSanitizedPlayerName <
+         updater::offsets.m_hPlayerPawn)
             ? updater::offsets.m_sSanitizedPlayerName
             : updater::offsets.m_hPlayerPawn;
     ptrdiff_t controllerMaxOffset =
@@ -146,8 +143,8 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
         static_cast<size_t>(controllerMaxOffset - controllerMinOffset));
 
     uint32_t pawnHandle = ReadFromBuffer<uint32_t>(
-        controllerBlock,
-        static_cast<size_t>(updater::offsets.m_hPlayerPawn - controllerMinOffset));
+        controllerBlock, static_cast<size_t>(updater::offsets.m_hPlayerPawn -
+                                             controllerMinOffset));
     if (!pawnHandle || pawnHandle == 0xFFFFFFFF)
       continue;
 
@@ -167,10 +164,9 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
           pawnPage, static_cast<size_t>(pawnIndex & 0x1FF) * kEntityStride);
     }
     auto endPawn = std::chrono::high_resolution_clock::now();
-    totalGetPawn +=
-        std::chrono::duration_cast<std::chrono::microseconds>(endPawn -
-                                                              startPawn)
-            .count();
+    totalGetPawn += std::chrono::duration_cast<std::chrono::microseconds>(
+                        endPawn - startPawn)
+                        .count();
 
     if (!pawn)
       continue;
@@ -188,8 +184,10 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
             ? updater::offsets.m_iHealth
             : updater::offsets.m_iTeamNum;
     ptrdiff_t pawnStatsMaxOffset =
-        ((updater::offsets.m_iHealth + static_cast<ptrdiff_t>(sizeof(uint32_t))) >
-         (updater::offsets.m_iTeamNum + static_cast<ptrdiff_t>(sizeof(uint32_t))))
+        ((updater::offsets.m_iHealth +
+          static_cast<ptrdiff_t>(sizeof(uint32_t))) >
+         (updater::offsets.m_iTeamNum +
+          static_cast<ptrdiff_t>(sizeof(uint32_t))))
             ? (updater::offsets.m_iHealth +
                static_cast<ptrdiff_t>(sizeof(uint32_t)))
             : (updater::offsets.m_iTeamNum +
@@ -198,10 +196,10 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
     auto pawnStatsBlock =
         ReadBlock(mem, pawn + pawnStatsMinOffset,
                   static_cast<size_t>(pawnStatsMaxOffset - pawnStatsMinOffset));
-    auto posBlock =
-        ReadBlock(mem, pawn + updater::offsets.m_vOldOrigin, sizeof(PositionData));
-    auto angleBlock =
-        ReadBlock(mem, pawn + updater::offsets.m_angEyeAngles, sizeof(AngleData));
+    auto posBlock = ReadBlock(mem, pawn + updater::offsets.m_vOldOrigin,
+                              sizeof(PositionData));
+    auto angleBlock = ReadBlock(mem, pawn + updater::offsets.m_angEyeAngles,
+                                sizeof(AngleData));
 
     PositionData pos = ReadFromBuffer<PositionData>(posBlock, 0);
     AngleData angles = ReadFromBuffer<AngleData>(angleBlock, 0);
@@ -212,14 +210,13 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
         pawnStatsBlock,
         static_cast<size_t>(updater::offsets.m_iTeamNum - pawnStatsMinOffset));
     uintptr_t namePtr = ReadFromBuffer<uintptr_t>(
-        controllerBlock, static_cast<size_t>(
-                             updater::offsets.m_sSanitizedPlayerName -
-                             controllerMinOffset));
+        controllerBlock,
+        static_cast<size_t>(updater::offsets.m_sSanitizedPlayerName -
+                            controllerMinOffset));
     auto endReadData = std::chrono::high_resolution_clock::now();
-    totalReadData +=
-        std::chrono::duration_cast<std::chrono::microseconds>(endReadData -
-                                                              startReadData)
-            .count();
+    totalReadData += std::chrono::duration_cast<std::chrono::microseconds>(
+                         endReadData - startReadData)
+                         .count();
 
     if (pawnHealth == 0 || !namePtr)
       continue;
@@ -236,10 +233,9 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
       }
     }
     auto endString = std::chrono::high_resolution_clock::now();
-    totalReadString +=
-        std::chrono::duration_cast<std::chrono::microseconds>(endString -
-                                                              startString)
-            .count();
+    totalReadString += std::chrono::duration_cast<std::chrono::microseconds>(
+                           endString - startString)
+                           .count();
 
     if (name.empty() || name == "Unknown")
       continue;
@@ -266,14 +262,14 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
                        endTotal - startTotal)
                        .count();
 
-  Log::Info("[PROF] Total=" + std::to_string(totalTime) + "ms | " +
-            "Players=" + std::to_string(validPlayers) + " | " +
-            "GetController=" + std::to_string(totalGetController / 1000) +
-            "ms | " + "GetPawn=" + std::to_string(totalGetPawn / 1000) +
-            "ms | " + "ReadData=" + std::to_string(totalReadData / 1000) +
-            "ms | " + "ReadString=" + std::to_string(totalReadString / 1000) +
-            "ms | " + "EntityList=" + std::to_string(entityListTime / 1000) +
-            "ms");
+  Log::Debug("Total=" + std::to_string(totalTime) + "ms | " +
+             "Players=" + std::to_string(validPlayers) + " | " +
+             "GetController=" + std::to_string(totalGetController / 1000) +
+             "ms | " + "GetPawn=" + std::to_string(totalGetPawn / 1000) +
+             "ms | " + "ReadData=" + std::to_string(totalReadData / 1000) +
+             "ms | " + "ReadString=" + std::to_string(totalReadString / 1000) +
+             "ms | " + "EntityList=" + std::to_string(entityListTime / 1000) +
+             "ms");
 }
 
 void Run(const Memory &mem, uintptr_t clientBase) {
@@ -311,7 +307,8 @@ void Run(const Memory &mem, uintptr_t clientBase) {
 
   uint8_t localTeam = 0;
   if (localController) {
-    localTeam = mem.read<uint8_t>(localController + updater::offsets.m_iTeamNum);
+    localTeam =
+        mem.read<uint8_t>(localController + updater::offsets.m_iTeamNum);
   }
   m_data["m_local_team"] = localTeam;
 
