@@ -1,138 +1,200 @@
 #include "updater.h"
+
 #include "../utils/logger.h"
+
 #include <Windows.h>
+
+#include <filesystem>
+
+#include <fstream>
+
 #include <iostream>
+
 #include <nlohmann/json.hpp>
-#include <wininet.h>
 
 using json = nlohmann::json;
 
+namespace fs = std::filesystem;
+
 namespace updater {
+
 GameOffsets offsets;
 
-std::string FetchURL(const std::string &url) {
-  std::string result = "";
-  HINTERNET hInternet = InternetOpenA("cs2-webradar by swansizz",
-                                      INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-  if (!hInternet)
-    return result;
+static std::string ReadLocalFile(const std::wstring &path) {
 
-  HINTERNET hUrl =
-      InternetOpenUrlA(hInternet, url.c_str(), NULL, 0,
-                       INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
-  if (hUrl) {
-    char buffer[4096];
-    DWORD bytesRead = 0;
-    while (InternetReadFile(hUrl, buffer, sizeof(buffer), &bytesRead) &&
-           bytesRead > 0) {
-      result.append(buffer, bytesRead);
-    }
-    InternetCloseHandle(hUrl);
+  std::ifstream file(path, std::ios::binary);
+
+  if (!file.is_open()) {
+
+    return "";
   }
-  InternetCloseHandle(hInternet);
-  return result;
+
+  std::string content((std::istreambuf_iterator<char>(file)),
+
+                      std::istreambuf_iterator<char>());
+
+  return content;
+}
+
+static std::wstring GetExeDirectory() {
+
+  wchar_t path[MAX_PATH];
+
+  GetModuleFileNameW(NULL, path, MAX_PATH);
+
+  std::wstring ws(path);
+
+  size_t pos = ws.find_last_of(L"\\/");
+
+  return (pos != std::wstring::npos) ? ws.substr(0, pos) : ws;
+}
+
+static std::wstring FindOffsetsDirectory() {
+  std::wstring exeDir = GetExeDirectory();
+  std::vector<std::wstring> searchPaths = {
+      exeDir + L"\\offsets",
+      exeDir + L"\\..\\offsets",
+      exeDir + L"\\..\\..\\offsets",
+      exeDir + L"\\..\\..\\..\\offsets",
+      exeDir + L"\\..\\..\\src\\offsets",
+      L"offsets",
+      L"src\\offsets",
+      L"..\\offsets",
+      L"..\\src\\offsets",
+      L"..\\..\\src\\offsets",
+  };
+
+  for (const auto &dir : searchPaths) {
+    std::wstring testFile = dir + L"\\offsets.json";
+    if (GetFileAttributesW(testFile.c_str()) != INVALID_FILE_ATTRIBUTES) {
+      Log::Info("Found offsets directory: " + std::string(dir.begin(), dir.end()));
+      return dir;
+    }
+  }
+
+  return L"";
+}
+
+static ptrdiff_t GetClassField(const json &clientClasses,
+                               const std::string &className,
+                               const std::string &fieldName) {
+  if (!clientClasses.contains(className)) {
+    Log::Warning("Class not found: " + className);
+    return 0;
+  }
+
+  const auto &cls = clientClasses[className];
+
+  if (!cls.contains("fields") || !cls["fields"].contains(fieldName)) {
+    Log::Warning("Field not found: " + className + "." + fieldName);
+    return 0;
+  }
+
+  const auto &field = cls["fields"][fieldName];
+
+  if (field.is_number()) {
+    ptrdiff_t value = field.get<ptrdiff_t>();
+    Log::Info("JSON[" + className + "." + fieldName + "] = " + std::to_string(value) + " (direct)");
+    return value;
+  } else if (field.is_object() && field.contains("offset")) {
+    ptrdiff_t value = field["offset"].get<ptrdiff_t>();
+    Log::Info("JSON[" + className + "." + fieldName + "] = " + std::to_string(value) + " (nested)");
+    return value;
+  } else {
+    Log::Error("Invalid field format for: " + className + "." + fieldName);
+    return 0;
+  }
 }
 
 bool InitializeOffsets() {
-  Log::Info("Fetching dynamic offsets from GitHub...");
+  Log::Info("Loading offsets from local files...");
+  std::wstring offsetsDir = FindOffsetsDirectory();
+  if (offsetsDir.empty()) {
+    Log::Error("Failed to find offsets directory. Make sure the 'offsets' "
+               "folder with offsets.json and client_dll.json exists.");
+    return false;
+  }
 
-  std::string offsetsJsonRaw = FetchURL("https://raw.githubusercontent.com/a2x/"
-                                        "cs2-dumper/main/output/offsets.json");
-  std::string clientJsonRaw =
-      FetchURL("https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/"
-               "client_dll.json");
-
-  if (offsetsJsonRaw.empty() || clientJsonRaw.empty()) {
-    Log::Error("Failed to fetch offsets from internet.");
+  std::string offsetsRaw = ReadLocalFile(offsetsDir + L"\\offsets.json");
+  if (offsetsRaw.empty()) {
+    Log::Error("Failed to read offsets.json");
     return false;
   }
 
   try {
-    auto offsetsJson = json::parse(offsetsJsonRaw);
-    auto clientJson = json::parse(clientJsonRaw);
-
-    // parse offsets
+    auto offsetsJson = json::parse(offsetsRaw);
     auto clientOffsets = offsetsJson["client.dll"];
-    offsets.dwLocalPlayerPawn =
-        clientOffsets["dwLocalPlayerPawn"].get<ptrdiff_t>();
+    offsets.dwLocalPlayerPawn = clientOffsets["dwLocalPlayerPawn"].get<ptrdiff_t>();
     offsets.dwEntityList = clientOffsets["dwEntityList"].get<ptrdiff_t>();
     offsets.dwViewMatrix = clientOffsets["dwViewMatrix"].get<ptrdiff_t>();
-    offsets.dwGameEntitySystem =
-        clientOffsets["dwGameEntitySystem"].get<ptrdiff_t>();
+    offsets.dwGameEntitySystem = clientOffsets["dwGameEntitySystem"].get<ptrdiff_t>();
     offsets.dwGlobalVars = clientOffsets["dwGlobalVars"].get<ptrdiff_t>();
-    offsets.dwLocalPlayerController =
-        clientOffsets["dwLocalPlayerController"].get<ptrdiff_t>();
-
-    // parse client schema (classes)
-    auto clientSchema = clientJson["client.dll"]["classes"];
-    offsets.m_hPlayerPawn =
-        clientSchema["CCSPlayerController"]["fields"]["m_hPlayerPawn"]
-            .get<ptrdiff_t>();
-    offsets.m_iHealth =
-        clientSchema["C_BaseEntity"]["fields"]["m_iHealth"].get<ptrdiff_t>();
-    offsets.m_iTeamNum =
-        clientSchema["C_BaseEntity"]["fields"]["m_iTeamNum"].get<ptrdiff_t>();
-    offsets.m_vOldOrigin =
-        clientSchema["C_BasePlayerPawn"]["fields"]["m_vOldOrigin"]
-            .get<ptrdiff_t>();
-    offsets.m_pGameSceneNode =
-        clientSchema["C_BaseEntity"]["fields"]["m_pGameSceneNode"]
-            .get<ptrdiff_t>();
-    offsets.m_vecAbsOrigin =
-        clientSchema["CGameSceneNode"]["fields"]["m_vecAbsOrigin"]
-            .get<ptrdiff_t>();
-    offsets.m_angEyeAngles =
-        clientSchema["C_CSPlayerPawn"]["fields"]["m_angEyeAngles"]
-            .get<ptrdiff_t>();
-    offsets.m_flFlashBangTime =
-        clientSchema["C_CSPlayerPawnBase"]["fields"]["m_flFlashBangTime"]
-            .get<ptrdiff_t>();
-
-    // New additional fields
-    offsets.m_sSanitizedPlayerName =
-        clientSchema["CCSPlayerController"]["fields"]["m_sSanitizedPlayerName"]
-            .get<ptrdiff_t>();
-    offsets.m_pInGameMoneyServices =
-        clientSchema["CCSPlayerController"]["fields"]["m_pInGameMoneyServices"]
-            .get<ptrdiff_t>();
-    offsets.m_iAccount = clientSchema["CCSPlayerController_InGameMoneyServices"]
-                                     ["fields"]["m_iAccount"]
-                                         .get<ptrdiff_t>();
-    offsets.m_pWeaponServices =
-        clientSchema["C_BasePlayerPawn"]["fields"]["m_pWeaponServices"]
-            .get<ptrdiff_t>();
-    offsets.m_hActiveWeapon =
-        clientSchema["CPlayer_WeaponServices"]["fields"]["m_hActiveWeapon"]
-            .get<ptrdiff_t>();
-    offsets.m_hMyWeapons =
-        clientSchema["CPlayer_WeaponServices"]["fields"]["m_hMyWeapons"]
-            .get<ptrdiff_t>();
-    offsets.m_ArmorValue =
-        clientSchema["C_CSPlayerPawn"]["fields"]["m_ArmorValue"]
-            .get<ptrdiff_t>();
-    offsets.m_pItemServices =
-        clientSchema["C_BasePlayerPawn"]["fields"]["m_pItemServices"]
-            .get<ptrdiff_t>();
-    offsets.m_bHasHelmet =
-        clientSchema["CCSPlayer_ItemServices"]["fields"]["m_bHasHelmet"]
-            .get<ptrdiff_t>();
-    offsets.m_bHasDefuser =
-        clientSchema["CCSPlayer_ItemServices"]["fields"]["m_bHasDefuser"]
-            .get<ptrdiff_t>();
-
-    // Weapon data offsets (subclass based)
-    offsets.m_WeaponData = 0x08; // Fixed usually
-    offsets.m_szName = clientSchema["CCSWeaponBaseVData"]["fields"]["m_szName"]
-                           .get<ptrdiff_t>();
-    offsets.m_WeaponType =
-        clientSchema["CCSWeaponBaseVData"]["fields"]["m_WeaponType"]
-            .get<ptrdiff_t>();
-
-    Log::Fine("Offsets updated successfully.");
-    return true;
+    offsets.dwLocalPlayerController = clientOffsets["dwLocalPlayerController"].get<ptrdiff_t>();
   } catch (const json::exception &e) {
-    Log::Error("JSON parse error: " + std::string(e.what()));
+    Log::Error("offsets.json parse error: " + std::string(e.what()));
     return false;
   }
+
+  std::string clientDllRaw = ReadLocalFile(offsetsDir + L"\\client_dll.json");
+  if (clientDllRaw.empty()) {
+    Log::Error("Failed to read client_dll.json");
+    return false;
+  }
+
+  try {
+    auto clientDllJson = json::parse(clientDllRaw);
+    const auto &classes = clientDllJson["client.dll"]["classes"];
+    offsets.m_hPlayerPawn = GetClassField(classes, "CCSPlayerController", "m_hPlayerPawn");
+    offsets.m_sSanitizedPlayerName = GetClassField(classes, "CCSPlayerController", "m_sSanitizedPlayerName");
+    offsets.m_pInGameMoneyServices = GetClassField(classes, "CCSPlayerController", "m_pInGameMoneyServices");
+    offsets.m_iHealth = GetClassField(classes, "C_BaseEntity", "m_iHealth");
+    offsets.m_iTeamNum = GetClassField(classes, "C_BaseEntity", "m_iTeamNum");
+    offsets.m_pGameSceneNode = GetClassField(classes, "C_BaseEntity", "m_pGameSceneNode");
+    offsets.m_vOldOrigin = GetClassField(classes, "C_BasePlayerPawn", "m_vOldOrigin");
+    offsets.m_pWeaponServices = GetClassField(classes, "C_BasePlayerPawn", "m_pWeaponServices");
+    offsets.m_pItemServices = GetClassField(classes, "C_BasePlayerPawn", "m_pItemServices");
+    offsets.m_vecAbsOrigin = GetClassField(classes, "CGameSceneNode", "m_vecAbsOrigin");
+    offsets.m_angEyeAngles = GetClassField(classes, "C_CSPlayerPawn", "m_angEyeAngles");
+    offsets.m_ArmorValue = GetClassField(classes, "C_CSPlayerPawn", "m_ArmorValue");
+    offsets.m_flFlashBangTime = GetClassField(classes, "C_CSPlayerPawnBase", "m_flFlashBangTime");
+    offsets.m_iAccount = GetClassField(classes, "CCSPlayerController_InGameMoneyServices", "m_iAccount");
+    offsets.m_hActiveWeapon = GetClassField(classes, "CPlayer_WeaponServices", "m_hActiveWeapon");
+    offsets.m_hMyWeapons = GetClassField(classes, "CPlayer_WeaponServices", "m_hMyWeapons");
+    offsets.m_bHasHelmet = GetClassField(classes, "CCSPlayer_ItemServices", "m_bHasHelmet");
+    offsets.m_bHasDefuser = GetClassField(classes, "CCSPlayer_ItemServices", "m_bHasDefuser");
+    offsets.m_szName = GetClassField(classes, "CCSWeaponBaseVData", "m_szName");
+    offsets.m_WeaponType = GetClassField(classes, "CCSWeaponBaseVData", "m_WeaponType");
+    offsets.m_WeaponData = 0x08;
+  } catch (const json::exception &e) {
+    Log::Error("client_dll.json parse error: " + std::string(e.what()));
+    return false;
+  }
+
+  Log::Fine("=== Loaded Offsets ===");
+  Log::Info("dwEntityList=0x" + std::to_string(offsets.dwEntityList));
+  Log::Info("dwLocalPlayerPawn=0x" + std::to_string(offsets.dwLocalPlayerPawn));
+  Log::Info("dwLocalPlayerController=0x" + std::to_string(offsets.dwLocalPlayerController));
+  Log::Info("dwLocalPlayerController=0x" +
+
+            std::to_string(offsets.dwLocalPlayerController));
+
+  Log::Info("m_hPlayerPawn=0x" + std::to_string(offsets.m_hPlayerPawn));
+
+  Log::Info("m_iHealth=0x" + std::to_string(offsets.m_iHealth));
+
+  Log::Info("m_iTeamNum=0x" + std::to_string(offsets.m_iTeamNum));
+
+  Log::Info("m_pGameSceneNode=0x" + std::to_string(offsets.m_pGameSceneNode));
+
+  Log::Info("m_vecAbsOrigin=0x" + std::to_string(offsets.m_vecAbsOrigin));
+
+  Log::Info("m_angEyeAngles=0x" + std::to_string(offsets.m_angEyeAngles));
+
+  Log::Info("m_sSanitizedPlayerName=0x" +
+
+            std::to_string(offsets.m_sSanitizedPlayerName));
+
+  return true;
 }
-} // namespace updater
+
+}

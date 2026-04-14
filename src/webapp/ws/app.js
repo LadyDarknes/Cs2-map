@@ -6,9 +6,9 @@ console.log("web_server started")
 const port = 22006;
 const server = http.createServer();
 const web_socket_server = new WebSocketServer(
-{
-    server: server, path: "/cs2_webradar"
-});
+    {
+        server: server, path: "/cs2_webradar"
+    });
 
 web_socket_server.on("connection", (web_socket, request) => {
     const client_address = request.socket.remoteAddress.replace("::ffff:", "");
@@ -16,7 +16,9 @@ web_socket_server.on("connection", (web_socket, request) => {
 
     web_socket.on("message", (message) => {
         web_socket_server.clients.forEach((client) => {
-            client.send(message);
+            if (client !== web_socket && client.readyState === 1) { // 1 is OPEN
+                client.send(message);
+            }
         });
     });
 

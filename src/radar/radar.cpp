@@ -13,80 +13,92 @@ json m_data;
 
 std::string ReadString(const Memory &mem, uintptr_t address,
                        size_t maxLen = 128) {
-  std::string res;
-  char buf[128];
-  for (size_t i = 0; i < maxLen; ++i) {
-    char c = mem.read<char>(address + i);
-    if (!c)
-      break;
-    res += c;
-  }
-  return res;
+  if (!address || maxLen == 0)
+    return "";
+
+  char buf[128] = {0};
+  size_t readSize = (maxLen > 128) ? 128 : maxLen;
+
+  struct DataBlock {
+    char data[128];
+  };
+
+  DataBlock block = mem.read<DataBlock>(address);
+  block.data[readSize - 1] = '\0';
+  return std::string(block.data);
 }
 
-uintptr_t GetEntity(const Memory &mem, uintptr_t clientBase, int32_t idx) {
-  uintptr_t entityList =
-      mem.read<uintptr_t>(clientBase + updater::offsets.dwEntityList);
+uintptr_t GetController(const Memory &mem, uintptr_t entityList, int32_t idx) {
   if (!entityList)
     return 0;
 
-  uintptr_t entryList = mem.read<uintptr_t>(entityList + (8 * (idx >> 9) + 16));
-  if (!entryList)
+  uintptr_t listEntry = mem.read<uintptr_t>(entityList + 0x10);
+  if (!listEntry)
     return 0;
 
-  return mem.read<uintptr_t>(entryList + (120 * (idx & 0x1FF)));
+  return mem.read<uintptr_t>(listEntry + idx * 0x70);
+}
+
+uintptr_t GetPawnFromHandle(const Memory &mem, uintptr_t entityList,
+                            uint32_t handle) {
+  if (!handle || handle == 0xFFFFFFFF)
+    return 0;
+
+  int32_t idx = handle & 0x7FFF;
+
+  uintptr_t listEntry =
+      mem.read<uintptr_t>(entityList + 0x8 * ((handle & 0x7FFF) >> 9) + 0x10);
+  if (!listEntry)
+    return 0;
+
+  return mem.read<uintptr_t>(listEntry + 0x70 * (idx & 0x1FF));
+}
+
+uintptr_t GetEntityFromHandle(const Memory &mem, uintptr_t entityList,
+                              uint32_t handle) {
+  return GetPawnFromHandle(mem, entityList, handle);
 }
 
 void GetPlayers(const Memory &mem, uintptr_t clientBase) {
   m_data["m_players"] = json::array();
 
-  for (int i = 1; i <= 64; ++i) {
-    uintptr_t controller = GetEntity(mem, clientBase, i);
+  uintptr_t entityList =
+      mem.read<uintptr_t>(clientBase + updater::offsets.dwEntityList);
+  if (!entityList)
+    return;
+
+  for (int i = 1; i < 64; ++i) {
+    uintptr_t controller = GetController(mem, entityList, i);
     if (!controller)
       continue;
 
-    // Basic Controller info
-    uint32_t health =
-        mem.read<uint32_t>(controller + updater::offsets.m_iHealth);
-    uint32_t team =
-        mem.read<uint32_t>(controller + updater::offsets.m_iTeamNum);
-
-    // Check if it's a valid player controller (sanity check on name)
-    uintptr_t namePtr = mem.read<uintptr_t>(
-        controller + updater::offsets.m_sSanitizedPlayerName);
-    std::string name = "Unknown";
-    if (namePtr) {
-      name = ReadString(mem, namePtr, 64);
-    }
-
-    if (name == "Unknown" || name.empty())
+    uint32_t pawnHandle =
+        mem.read<uint32_t>(controller + updater::offsets.m_hPlayerPawn);
+    if (!pawnHandle || pawnHandle == 0xFFFFFFFF)
       continue;
 
-    uintptr_t pawnHandle =
-        mem.read<uintptr_t>(controller + updater::offsets.m_hPlayerPawn);
-    if (!pawnHandle)
-      continue;
-
-    // Find Pawn
-    uintptr_t entityList =
-        mem.read<uintptr_t>(clientBase + updater::offsets.dwEntityList);
-    uintptr_t entryList = mem.read<uintptr_t>(
-        entityList + (8 * ((pawnHandle & 0x7FFF) >> 9) + 16));
-    if (!entryList)
-      continue;
-    uintptr_t pawn =
-        mem.read<uintptr_t>(entryList + (120 * (pawnHandle & 0x1FF)));
+    uintptr_t pawn = GetPawnFromHandle(mem, entityList, pawnHandle);
     if (!pawn)
       continue;
 
-    // Position & State
     uint32_t pawnHealth = mem.read<uint32_t>(pawn + updater::offsets.m_iHealth);
-    bool isDead = (pawnHealth <= 0);
+    if (pawnHealth == 0)
+      continue;
 
-    uintptr_t sceneNode =
-        mem.read<uintptr_t>(pawn + updater::offsets.m_pGameSceneNode);
-    float x = mem.read<float>(sceneNode + updater::offsets.m_vecAbsOrigin);
-    float y = mem.read<float>(sceneNode + updater::offsets.m_vecAbsOrigin + 4);
+    uint32_t team = mem.read<uint32_t>(pawn + updater::offsets.m_iTeamNum);
+
+    uintptr_t namePtr = mem.read<uintptr_t>(
+        controller + updater::offsets.m_sSanitizedPlayerName);
+    if (!namePtr)
+      continue;
+
+    std::string name = ReadString(mem, namePtr, 64);
+    if (name.empty() || name == "Unknown")
+      continue;
+
+    float x = mem.read<float>(pawn + updater::offsets.m_vOldOrigin);
+    float y = mem.read<float>(pawn + updater::offsets.m_vOldOrigin + 4);
+
     float eyeYaw = mem.read<float>(pawn + updater::offsets.m_angEyeAngles + 4);
 
     json pData;
@@ -94,7 +106,7 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
     pData["m_name"] = name;
     pData["m_team"] = team;
     pData["m_health"] = pawnHealth;
-    pData["m_is_dead"] = isDead;
+    pData["m_is_dead"] = (pawnHealth <= 0);
     pData["m_position"]["x"] = x;
     pData["m_position"]["y"] = y;
     pData["m_eye_angle"] = eyeYaw;
@@ -112,24 +124,34 @@ void Run(const Memory &mem, uintptr_t clientBase) {
 
   m_data = json::object();
 
-  // Read Map Name
   uintptr_t globalVars =
       mem.read<uintptr_t>(clientBase + updater::offsets.dwGlobalVars);
-  uintptr_t mapNamePtr =
-      mem.read<uintptr_t>(globalVars + 0x188); // Current map name offset
-  std::string mapName = ReadString(mem, mapNamePtr, 64);
+
+  std::string mapName = "invalid";
+  if (globalVars) {
+    uintptr_t mapNamePtr = mem.read<uintptr_t>(globalVars + 0x188);
+    if (mapNamePtr) {
+      mapName = ReadString(mem, mapNamePtr, 64);
+    }
+  }
+
   if (mapName.empty() || mapName == "<empty>")
     mapName = "invalid";
 
   m_data["m_map"] = mapName;
 
-  // Read Local Team
+  m_data["m_timestamp"] = GetTickCount64();
+
   uintptr_t localController = mem.read<uintptr_t>(
       clientBase + updater::offsets.dwLocalPlayerController);
-  uint32_t localTeam =
-      mem.read<uint32_t>(localController + updater::offsets.m_iTeamNum);
+
+  uint8_t localTeam = 0;
+  if (localController) {
+    localTeam =
+        mem.read<uint8_t>(localController + updater::offsets.m_iTeamNum);
+  }
   m_data["m_local_team"] = localTeam;
 
   GetPlayers(mem, clientBase);
 }
-} // namespace radar
+}
