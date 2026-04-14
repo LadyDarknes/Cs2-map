@@ -120,7 +120,7 @@ const App = () => {
           const timeSinceLastMsg = receiveTime - lastMsgTime;
           lastMsgTime = receiveTime;
 
-          if (msgCount % 50 === 0) {
+          if (msgCount % 5 === 0) {
             console.log(`[DEBUG React] Msg=${msgCount} | Type=${dataType} | TimeSinceLast=${timeSinceLastMsg}ms | Players=${parsedData.m_players?.length || 0} | Map=${parsedData.m_map}`);
           }
 

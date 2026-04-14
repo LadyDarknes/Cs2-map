@@ -87,20 +87,6 @@ typedef struct _WRITE_REQUEST {
   UCHAR data[256];
 } WRITE_REQUEST, *PWRITE_REQUEST;
 
-static ULONG JunkValue = 1;
-static inline void ObfuscateTick() {
-  JunkValue *= 3;
-  JunkValue ^= 0xDEADBEEF;
-  JunkValue += ((ULONG)KeQueryTimeIncrement() & 0xFF);
-}
-
-static NTSTATUS UselessWait() {
-  LARGE_INTEGER interval;
-  interval.QuadPart = -100;
-  KeDelayExecutionThread(KernelMode, FALSE, &interval);
-  return STATUS_SUCCESS;
-}
-
 NTKERNELAPI NTSTATUS NTAPI MmCopyVirtualMemory(
     PEPROCESS SourceProcess, PVOID SourceAddress, PEPROCESS TargetProcess,
     PVOID TargetAddress, SIZE_T BufferSize, KPROCESSOR_MODE PreviousMode,
@@ -257,7 +243,6 @@ static NTSTATUS DispatchCreateClose(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
   UNREFERENCED_PARAMETER(DeviceObject);
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = 0;
-  ObfuscateTick();
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
   return STATUS_SUCCESS;
 }
@@ -288,7 +273,6 @@ static NTSTATUS DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         ObDereferenceObject(g_TargetProcess);
       g_TargetProcess = process;
     }
-    UselessWait();
     bytesReturned = sizeof(REQUEST);
     break;
   }
@@ -314,7 +298,7 @@ static NTSTATUS DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
       }
     }
 
-    if (req->target && req->buffer && req->size > 0 && req->size <= 0x1000) {
+    if (req->target && req->buffer && req->size > 0 && req->size <= 0x10000) {
       SIZE_T bytes = 0;
       status = MmCopyVirtualMemory(g_TargetProcess, req->target,
                                    PsGetCurrentProcess(), req->buffer,
@@ -322,7 +306,6 @@ static NTSTATUS DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     } else {
       status = STATUS_INVALID_PARAMETER;
     }
-    UselessWait();
     bytesReturned = sizeof(REQUEST);
     break;
   }
@@ -383,8 +366,6 @@ static NTSTATUS DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     if (pack->baseAddress == 0)
       status = STATUS_NOT_FOUND;
 
-    ObfuscateTick();
-    UselessWait();
     bytesReturned = sizeof(MODULE_PACK);
     break;
   }
@@ -396,7 +377,6 @@ static NTSTATUS DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
   Irp->IoStatus.Status = status;
   Irp->IoStatus.Information = bytesReturned;
-  ObfuscateTick();
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
   return status;
 }
