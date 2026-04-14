@@ -29,7 +29,6 @@ const Player = ({ playerData, mapData, radarImage, localTeam, averageLatency, se
 
   const scaledSize = 0.7 * settings.dotSize;
 
-  // Store the last known position when the player dies
   useEffect(() => {
     if (playerData.m_is_dead) {
       if (!lastKnownPosition) {

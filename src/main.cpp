@@ -181,7 +181,7 @@ int wmain(const int argc, wchar_t **argv) {
       ws = easywsclient::WebSocket::from_url(
           "ws://127.0.0.1:22006/cs2_webradar");
     }
-    Sleep(100);
+    Sleep(16);  // ~60 FPS
   }
 
   return 0;
