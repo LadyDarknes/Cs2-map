@@ -43,14 +43,28 @@ private:
 
 public:
   Memory(const std::wstring &processName) noexcept {
+    std::cout
+        << "[+] Attempting to connect to kernel device: \\\\.\\NsiCoreSys\n";
+
     kernelDriver =
         CreateFileW(L"\\\\.\\NsiCoreSys", GENERIC_READ | GENERIC_WRITE, 0,
                     nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (kernelDriver == INVALID_HANDLE_VALUE) {
+      DWORD error = GetLastError();
       kernelDriver = nullptr;
-      std::cout << "[!] Cannot open kernel device\n";
+      std::cout << "[!] Cannot open kernel device - Error code: " << error;
+      if (error == ERROR_FILE_NOT_FOUND)
+        std::cout << " (Driver not loaded)";
+      else if (error == ERROR_ACCESS_DENIED)
+        std::cout << " (Insufficient privileges)";
+      else if (error == ERROR_INVALID_NAME)
+        std::cout << " (Invalid device name)";
+      else if (error == ERROR_BAD_IMPERSONATION_LEVEL)
+        std::cout << " (Bad impersonation)";
+      std::cout << "\n";
       return;
     }
+    std::cout << "[+] Kernel device handle opened successfully\n";
 
     PID_PACK pidPack = {};
     wcsncpy_s(pidPack.name, processName.data(), processName.size());
@@ -85,7 +99,7 @@ public:
 
   bool IsKernelMode() const noexcept { return kernelDriver != nullptr; }
 
-  std::uintptr_t GetModuleBase(const std::wstring &moduleName) const noexcept {
+  uintptr_t GetModuleBase(const std::wstring &moduleName) const {
     if (!kernelDriver)
       return 0;
 

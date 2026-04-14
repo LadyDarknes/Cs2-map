@@ -9,10 +9,10 @@ import MaskedIcon from "./components/maskedicon";
 const CONNECTION_TIMEOUT = 5000;
 
 /* change this to '1' if you want to use offline (your own pc only) */
-const USE_LOCALHOST = 0;
+const USE_LOCALHOST = 1;
 
 /* you can get your public ip from https://ipinfo.io/ip */
-const PUBLIC_IP = "your ip goes here".trim();
+const PUBLIC_IP = "78.190.136.89".trim();
 const PORT = 22006;
 
 const EFFECTIVE_IP = USE_LOCALHOST ? "localhost" : PUBLIC_IP.match(/[a-zA-Z]/) ? window.location.hostname : PUBLIC_IP;
@@ -96,21 +96,39 @@ const App = () => {
         console.error(error);
       };
 
+      let currentMapName = "";
+
       webSocket.onmessage = async (event) => {
         setAverageLatency(getLatency());
 
-        const parsedData = JSON.parse(await event.data.text());
-        setPlayerArray(parsedData.m_players);
-        setLocalTeam(parsedData.m_local_team);
-        setBombData(parsedData.m_bomb);
+        let rawData;
+        if (typeof event.data === 'string') {
+          rawData = event.data;
+        } else if (event.data instanceof Blob) {
+          rawData = await event.data.text();
+        } else {
+          console.error("Unknown message type:", typeof event.data);
+          return;
+        }
 
-        const map = parsedData.m_map;
-        if (map !== "invalid") {
-          setMapData({
-            ...(await (await fetch(`data/${map}/data.json`)).json()),
-            name: map,
-          });
-          document.body.style.backgroundImage = `url(./data/${map}/background.png)`;
+        try {
+          const parsedData = JSON.parse(rawData);
+          setPlayerArray(parsedData.m_players || []);
+          setLocalTeam(parsedData.m_local_team);
+          setBombData(parsedData.m_bomb);
+
+          const map = parsedData.m_map;
+          if (map && map !== "invalid" && map !== currentMapName) {
+            currentMapName = map;
+            const response = await fetch(`data/${map}/data.json`);
+            if (response.ok) {
+              const data = await response.json();
+              setMapData({ ...data, name: map });
+              document.body.style.backgroundImage = `url(./data/${map}/background.png)`;
+            }
+          }
+        } catch (e) {
+          console.error("Error processing message:", e);
         }
       };
     };

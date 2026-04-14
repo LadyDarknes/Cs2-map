@@ -423,18 +423,34 @@ static NTSTATUS DriverInitialize(PDRIVER_OBJECT DriverObject,
   RtlInitUnicodeString(&devName, L"\\Device\\NsiCoreSys");
   RtlInitUnicodeString(&symLink, L"\\DosDevices\\NsiCoreSys");
 
+  // Debug: Driver initialization started
+  DbgPrint("[NsiCoreSys] DriverInitialize started\n");
+
+  // Eger onceki testten kalan bir symlink varsa once onu temizlemeyi dene
+  NTSTATUS cleanupStatus = IoDeleteSymbolicLink(&symLink);
+  DbgPrint("[NsiCoreSys] IoDeleteSymbolicLink status: 0x%08X\n", cleanupStatus);
+
   NTSTATUS status =
       IoCreateDevice(DriverObject, 0, &devName, FILE_DEVICE_UNKNOWN,
                      FILE_DEVICE_SECURE_OPEN, FALSE, &g_DeviceObject);
 
-  if (!NT_SUCCESS(status))
+  DbgPrint("[NsiCoreSys] IoCreateDevice status: 0x%08X\n", status);
+
+  if (!NT_SUCCESS(status)) {
+    DbgPrint("[NsiCoreSys] Failed to create device\n");
     return status;
+  }
+
+  DbgPrint("[NsiCoreSys] Device created successfully at \\Device\\NsiCoreSys\n");
 
   status = IoCreateSymbolicLink(&symLink, &devName);
+  DbgPrint("[NsiCoreSys] IoCreateSymbolicLink status: 0x%08X\n", status);
   if (!NT_SUCCESS(status)) {
+    DbgPrint("[NsiCoreSys] Failed to create symbolic link\n");
     IoDeleteDevice(g_DeviceObject);
     return status;
   }
+  DbgPrint("[NsiCoreSys] Symbolic link created: \\.\\NsiCoreSys\n");
 
   DriverObject->MajorFunction[IRP_MJ_CREATE] = DispatchCreateClose;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = DispatchCreateClose;

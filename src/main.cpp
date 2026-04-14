@@ -79,7 +79,6 @@ int wmain(const int argc, wchar_t **argv) {
     return -1;
   }
 
-  // Define memory instance and base address
   Memory mem(L"cs2.exe");
   if (!mem.IsConnected()) {
     Log::Error("Failed to find cs2.exe. Please run the game first.");
@@ -100,10 +99,8 @@ int wmain(const int argc, wchar_t **argv) {
   std::wstring app_js_path = current_path + L"\\webapp\\ws\\app.js";
 
   if (GetFileAttributesW(app_js_path.c_str()) == INVALID_FILE_ATTRIBUTES) {
-    // Try deeper fallback: src/build/bin -> src/webapp
     app_js_path = current_path + L"\\..\\..\\webapp\\ws\\app.js";
     if (GetFileAttributesW(app_js_path.c_str()) == INVALID_FILE_ATTRIBUTES) {
-      // Try even deeper (if ran from further down)
       app_js_path = current_path + L"\\..\\webapp\\ws\\app.js";
     }
   }
@@ -116,13 +113,12 @@ int wmain(const int argc, wchar_t **argv) {
       L"\\..\\..\\webapp && npm run dev\" > node_log.txt 2>&1";
   _wsystem(node_cmd.c_str());
 
-  Sleep(3000); // 3 second for node startup
+  Sleep(3000);
 
   Log::Info("Launching Web Radar UI...");
   ShellExecuteA(NULL, "open", "http://localhost:5173", NULL, NULL,
                 SW_SHOWNORMAL);
 
-  // Initialize Winsock for easywsclient
   WSADATA wsaData;
   WSAStartup(MAKEWORD(2, 2), &wsaData);
 
@@ -137,11 +133,27 @@ int wmain(const int argc, wchar_t **argv) {
 
   Log::Fine("cs2-webradar by swansizz [Status: Active]");
 
+  int loopCount = 0;
   while (true) {
     radar::Run(mem, clientBase);
+
+    if (loopCount % 50 == 0) {
+      Log::Info("Loop running, ws=" + std::to_string((bool)ws) + ", players=" +
+                std::to_string(radar::m_data["m_players"].size()) +
+                ", map=" + radar::m_data["m_map"].get<std::string>());
+    }
+    loopCount++;
+
     if (ws) {
-      ws->send(radar::m_data.dump());
+      std::string data = radar::m_data.dump();
+      if (!data.empty() && data != "{}") {
+        ws->send(data);
+      }
       ws->poll();
+    } else {
+      Log::Warning("WebSocket is null, attempting reconnect...");
+      ws = easywsclient::WebSocket::from_url(
+          "ws://127.0.0.1:22006/cs2_webradar");
     }
     Sleep(100);
   }
