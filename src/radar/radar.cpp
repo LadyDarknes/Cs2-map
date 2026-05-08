@@ -79,7 +79,8 @@ std::string ReadString(const Memory &mem, uintptr_t address,
   return safeStr;
 }
 
-void GetPlayers(const Memory &mem, uintptr_t clientBase) {
+void GetPlayers(const Memory &mem, uintptr_t clientBase,
+                uintptr_t localController) {
   auto startTotal = std::chrono::high_resolution_clock::now();
   m_data["m_players"] = json::array();
 
@@ -179,23 +180,30 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
       float pitch, yaw, roll;
     };
 
-    ptrdiff_t pawnStatsMinOffset =
-        (updater::offsets.m_iHealth < updater::offsets.m_iTeamNum)
-            ? updater::offsets.m_iHealth
-            : updater::offsets.m_iTeamNum;
-    ptrdiff_t pawnStatsMaxOffset =
-        ((updater::offsets.m_iHealth +
-          static_cast<ptrdiff_t>(sizeof(uint32_t))) >
-         (updater::offsets.m_iTeamNum +
-          static_cast<ptrdiff_t>(sizeof(uint32_t))))
-            ? (updater::offsets.m_iHealth +
-               static_cast<ptrdiff_t>(sizeof(uint32_t)))
-            : (updater::offsets.m_iTeamNum +
-               static_cast<ptrdiff_t>(sizeof(uint32_t)));
+    ptrdiff_t pawnStatsMinOffset = updater::offsets.m_iHealth;
+    if (updater::offsets.m_iTeamNum < pawnStatsMinOffset)
+      pawnStatsMinOffset = updater::offsets.m_iTeamNum;
+    if (updater::offsets.m_ArmorValue < pawnStatsMinOffset)
+      pawnStatsMinOffset = updater::offsets.m_ArmorValue;
+
+    ptrdiff_t pawnStatsMaxOffset = updater::offsets.m_iHealth + sizeof(uint32_t);
+    if (updater::offsets.m_iTeamNum + static_cast<ptrdiff_t>(sizeof(uint32_t)) > pawnStatsMaxOffset)
+      pawnStatsMaxOffset = updater::offsets.m_iTeamNum + sizeof(uint32_t);
+    if (updater::offsets.m_ArmorValue + static_cast<ptrdiff_t>(sizeof(uint32_t)) > pawnStatsMaxOffset)
+      pawnStatsMaxOffset = updater::offsets.m_ArmorValue + sizeof(uint32_t);
 
     auto pawnStatsBlock =
         ReadBlock(mem, pawn + pawnStatsMinOffset,
                   static_cast<size_t>(pawnStatsMaxOffset - pawnStatsMinOffset));
+
+    // Read item services for helmet/defuser
+    uintptr_t itemServices = mem.read<uintptr_t>(pawn + updater::offsets.m_pItemServices);
+    bool hasHelmet = false;
+    bool hasDefuser = false;
+    if (itemServices) {
+      hasHelmet = mem.read<bool>(itemServices + updater::offsets.m_bHasHelmet);
+      hasDefuser = mem.read<bool>(itemServices + updater::offsets.m_bHasDefuser);
+    }
     auto posBlock = ReadBlock(mem, pawn + updater::offsets.m_vOldOrigin,
                               sizeof(PositionData));
     auto angleBlock = ReadBlock(mem, pawn + updater::offsets.m_angEyeAngles,
@@ -209,10 +217,21 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
     uint32_t team = ReadFromBuffer<uint32_t>(
         pawnStatsBlock,
         static_cast<size_t>(updater::offsets.m_iTeamNum - pawnStatsMinOffset));
+    uint32_t armor = ReadFromBuffer<uint32_t>(
+        pawnStatsBlock,
+        static_cast<size_t>(updater::offsets.m_ArmorValue - pawnStatsMinOffset));
     uintptr_t namePtr = ReadFromBuffer<uintptr_t>(
         controllerBlock,
         static_cast<size_t>(updater::offsets.m_sSanitizedPlayerName -
                             controllerMinOffset));
+
+    // Read money from controller
+    int money = 0;
+    uintptr_t moneyServices = mem.read<uintptr_t>(controller + updater::offsets.m_pInGameMoneyServices);
+    if (moneyServices) {
+      money = mem.read<int>(moneyServices + updater::offsets.m_iAccount);
+    }
+
     auto endReadData = std::chrono::high_resolution_clock::now();
     totalReadData += std::chrono::duration_cast<std::chrono::microseconds>(
                          endReadData - startReadData)
@@ -240,8 +259,83 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
     if (name.empty() || name == "Unknown")
       continue;
 
+    // Read weapons
+    json weaponsData = json::object();
+    weaponsData["m_melee"] = json::array();
+    weaponsData["m_utilities"] = json::array();
+    weaponsData["m_primary"] = nullptr;
+    weaponsData["m_secondary"] = nullptr;
+
+    uintptr_t weaponServices = mem.read<uintptr_t>(pawn + updater::offsets.m_pWeaponServices);
+    if (weaponServices) {
+      // Read active weapon
+      uint32_t activeWeaponHandle = mem.read<uint32_t>(weaponServices + updater::offsets.m_hActiveWeapon);
+      if (activeWeaponHandle != 0xFFFFFFFF) {
+        uint32_t activeWeaponIndex = activeWeaponHandle & 0x7FFF;
+        uint32_t activeWeaponPageIndex = activeWeaponIndex >> 9;
+        uintptr_t activeWeaponPagePtr = mem.read<uintptr_t>(entityList + 0x10 + (0x8 * activeWeaponPageIndex));
+        if (activeWeaponPagePtr) {
+          auto activeWeaponPage = ReadBlock(mem, activeWeaponPagePtr, kEntityPageSize);
+          uintptr_t activeWeapon = ReadFromBuffer<uintptr_t>(
+              activeWeaponPage, static_cast<size_t>(activeWeaponIndex & 0x1FF) * kEntityStride);
+          if (activeWeapon) {
+            uintptr_t weaponData = mem.read<uintptr_t>(activeWeapon + updater::offsets.m_WeaponData);
+            if (weaponData) {
+              std::string weaponName = ReadString(mem, weaponData + updater::offsets.m_szName, 64);
+              if (!weaponName.empty()) {
+                weaponsData["m_active"] = weaponName;
+              }
+            }
+          }
+        }
+      }
+
+      // Read all weapons (m_hMyWeapons - array of 64 handles)
+      for (int w = 0; w < 64; ++w) {
+        uint32_t weaponHandle = mem.read<uint32_t>(weaponServices + updater::offsets.m_hMyWeapons + (w * sizeof(uint32_t)));
+        if (weaponHandle == 0 || weaponHandle == 0xFFFFFFFF)
+          continue;
+
+        uint32_t weaponIndex = weaponHandle & 0x7FFF;
+        uint32_t weaponPageIndex = weaponIndex >> 9;
+        uintptr_t weaponPagePtr = mem.read<uintptr_t>(entityList + 0x10 + (0x8 * weaponPageIndex));
+        if (!weaponPagePtr)
+          continue;
+
+        auto weaponPage = ReadBlock(mem, weaponPagePtr, kEntityPageSize);
+        uintptr_t weapon = ReadFromBuffer<uintptr_t>(
+            weaponPage, static_cast<size_t>(weaponIndex & 0x1FF) * kEntityStride);
+        if (!weapon)
+          continue;
+
+        uintptr_t weaponData = mem.read<uintptr_t>(weapon + updater::offsets.m_WeaponData);
+        if (!weaponData)
+          continue;
+
+        std::string weaponName = ReadString(mem, weaponData + updater::offsets.m_szName, 64);
+        int weaponType = mem.read<int>(weaponData + updater::offsets.m_WeaponType);
+
+        if (weaponName.empty())
+          continue;
+
+        // Weapon types: 0=knife, 1=pistol, 2=smg, 3=rifle, 4=shotgun, 5=sniper, 6=machinegun, 7=grenade, 8=c4
+        if (weaponType == 0) {
+          weaponsData["m_melee"].push_back(weaponName);
+        } else if (weaponType == 7 || weaponType == 8) {
+          weaponsData["m_utilities"].push_back(weaponName);
+        } else if (weaponType == 1) {
+          if (weaponsData["m_secondary"].is_null())
+            weaponsData["m_secondary"] = weaponName;
+        } else {
+          if (weaponsData["m_primary"].is_null())
+            weaponsData["m_primary"] = weaponName;
+        }
+      }
+    }
+
     json pData;
     pData["m_idx"] = i;
+    pData["m_is_local"] = (controller == localController);
     pData["m_name"] = name;
     pData["m_team"] = team;
     pData["m_health"] = pawnHealth;
@@ -249,9 +343,12 @@ void GetPlayers(const Memory &mem, uintptr_t clientBase) {
     pData["m_position"]["x"] = pos.x;
     pData["m_position"]["y"] = pos.y;
     pData["m_eye_angle"] = angles.yaw;
-    pData["m_weapons"] = json::object();
-    pData["m_weapons"]["m_melee"] = json::array();
-    pData["m_weapons"]["m_utilities"] = json::array();
+    pData["m_armor"] = armor;
+    pData["m_has_helmet"] = hasHelmet;
+    pData["m_has_defuser"] = hasDefuser;
+    pData["m_money"] = money;
+    pData["m_model_name"] = name;  // Using player name as model identifier
+    pData["m_weapons"] = weaponsData;
 
     m_data["m_players"].push_back(pData);
     validPlayers++;
@@ -312,6 +409,6 @@ void Run(const Memory &mem, uintptr_t clientBase) {
   }
   m_data["m_local_team"] = localTeam;
 
-  GetPlayers(mem, clientBase);
+  GetPlayers(mem, clientBase, localController);
 }
 } // namespace radar
