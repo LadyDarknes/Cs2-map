@@ -1,11 +1,11 @@
 # ninja log v7
-20	819	7978933064004364	CMakeFiles/Cs2_Map.dir/gay/easywsclient/easywsclient.cpp.obj	f122da599d96cae8
-12	1030	7978933063918939	CMakeFiles/Cs2_Map.dir/mapper/portable_executable.cpp.obj	155b673ce18a5bc4
-7	1358	7978933063868306	CMakeFiles/Cs2_Map.dir/utils/utils.cpp.obj	7c627588c7ef122b
-14	1451	7978933063941519	CMakeFiles/Cs2_Map.dir/mapper/service.cpp.obj	e682a0bb98fd56d6
-10	1606	7978933063903776	CMakeFiles/Cs2_Map.dir/mapper/kdmapper.cpp.obj	7396db051cd46282
-8	1830	7978933063878714	CMakeFiles/Cs2_Map.dir/mapper/intel_driver.cpp.obj	74a74d8a816b83ff
-4	2989	7978933063846558	CMakeFiles/Cs2_Map.dir/main.cpp.obj	ab14a0f4113189d1
-18	3044	7978933063974073	CMakeFiles/Cs2_Map.dir/radar/radar.cpp.obj	cf03fbcdd3b688dd
-16	3477	7978933063963941	CMakeFiles/Cs2_Map.dir/updater/updater.cpp.obj	1df29f2b0a959607
-3477	3620	7978933098574397	bin/Cs2_Map.exe	d582ce784d2700ec
+32	2067	7994711063455315	CMakeFiles/Cs2_Map.dir/gay/easywsclient/easywsclient.cpp.obj	f122da599d96cae8
+19	2083	7994711063334750	CMakeFiles/Cs2_Map.dir/mapper/portable_executable.cpp.obj	155b673ce18a5bc4
+10	2218	7994711063246586	CMakeFiles/Cs2_Map.dir/utils/utils.cpp.obj	7c627588c7ef122b
+22	2418	7994711063364881	CMakeFiles/Cs2_Map.dir/mapper/service.cpp.obj	e682a0bb98fd56d6
+16	2699	7994711063309761	CMakeFiles/Cs2_Map.dir/mapper/kdmapper.cpp.obj	7396db051cd46282
+13	2776	7994711063266513	CMakeFiles/Cs2_Map.dir/mapper/intel_driver.cpp.obj	74a74d8a816b83ff
+6	4473	7994711063196289	CMakeFiles/Cs2_Map.dir/main.cpp.obj	ab14a0f4113189d1
+28	4620	7994711063420153	CMakeFiles/Cs2_Map.dir/radar/radar.cpp.obj	cf03fbcdd3b688dd
+25	5084	7994711063390069	CMakeFiles/Cs2_Map.dir/updater/updater.cpp.obj	1df29f2b0a959607
+5085	5250	7994711113988277	bin/Cs2_Map.exe	d582ce784d2700ec
