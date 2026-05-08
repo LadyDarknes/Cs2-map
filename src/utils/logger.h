@@ -155,7 +155,8 @@ inline void ClearConsole() {
   if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
     DWORD consoleSize = csbi.dwSize.X * csbi.dwSize.Y;
     FillConsoleOutputCharacter(hConsole, ' ', consoleSize, topLeft, &written);
-    FillConsoleOutputAttribute(hConsole, csbi.wAttributes, consoleSize, topLeft, &written);
+    FillConsoleOutputAttribute(hConsole, csbi.wAttributes, consoleSize, topLeft,
+                               &written);
     SetConsoleCursorPosition(hConsole, topLeft);
   }
 }
